@@ -1,91 +1,73 @@
 import { Elysia } from "elysia";
-import { html } from "@elysiajs/html";
 import { z } from "zod";
 import { Input } from "./components/Input";
-import { FormError, isObjectSet } from "./utils";
 import { BaseHtml } from "./components/BaseHtml";
+import { errorsStore } from "./store";
+import { config } from "./config";
+import { Form } from "./components/Form";
+
+const schema = z.object({
+  name: z.string().min(3),
+  email: z
+    .string()
+    .email()
+    .refine(async (email) => email !== "john@doe.com", {
+      message: "Email is already taken",
+    }),
+  age: z
+    .string()
+    .min(1, "Field must contain a value !")
+    .transform((v) => parseInt(v, 10)),
+});
 
 const app = new Elysia()
-  .use(html())
-  .all("/", async ({ body, path, set, request }) => {
-    const schema = z.object({
-      name: z.string().min(3),
-      age: z.preprocess(
-        (val) => parseInt(val as string, 10),
-        z.number().min(18, "You must be above 18 !")
-      ),
-      email: z
-        .string()
-        .email()
-        .refine(async (email) => (email === "john@doe.com" ? false : true), {
-          message: "Email is already taken",
-        }),
-    });
-    console.log({ DATA: body });
+  .use(config)
+  .all("/", async ({ body, set, request, isHtmxRequest }) => {
+    errorsStore.enterWith(null);
 
-    let errors: FormError<typeof schema> = null;
-
-    if (request.method === "POST" && isObjectSet(body)) {
+    if (request.method === "POST") {
       const parsedSchema = await schema.safeParseAsync(body);
 
-      if (!parsedSchema.success) {
-        errors = parsedSchema.error.flatten().fieldErrors;
-      } else {
-        if (!request.headers.has("hx-request")) {
+      if (parsedSchema.success) {
+        if (!isHtmxRequest) {
+          console.log(parsedSchema.data);
           set.redirect = "/form-completed";
           return;
         }
+      } else {
+        errorsStore.enterWith(parsedSchema.error.flatten().fieldErrors);
       }
     }
 
-    // http://hernantz.github.io/inline-form-validation-with-django-and-htmx.html
     return (
       <BaseHtml>
-        <h1 class="text-center">HTMX form</h1>
-        <form
-          novalidate
-          method="post"
-          class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
-        >
+        <h1 class="text-center text-xl">
+          <a href="/">HTMX form</a>
+        </h1>
+        <Form>
           <Input
             label="Email"
             name="email"
-            type="email"
-            value={body?.email ?? ""}
-            errors={errors?.email}
-            validate={{
-              url: path,
-              verb: "post",
+            clientValidation={{
+              triggerOn: "blur",
             }}
           />
           <Input
             label="Name"
             name="name"
-            type="text"
-            value={body?.name ?? ""}
-            errors={errors?.name}
-            validate={{
-              url: path,
-              verb: "post",
+            clientValidation={{
+              triggerOn: "keyup",
             }}
           />
           <Input
             label="Age"
             name="age"
-            type="text"
-            value={body?.age ?? ""}
-            errors={errors?.age}
-            validate={{
-              url: path,
-              verb: "post",
+            type="number"
+            clientValidation={{
+              triggerOn: "blur",
             }}
           />
-          <input
-            type="submit"
-            value="Submit"
-            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-          />
-        </form>
+        </Form>
       </BaseHtml>
     );
   })

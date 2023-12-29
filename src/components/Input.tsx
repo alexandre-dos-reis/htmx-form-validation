@@ -1,51 +1,78 @@
+import { errorsStore, contextStore } from "../store";
+import { cn } from "../utils";
+
 interface Props extends JSX.HtmlInputTag {
+  name: string;
   label?: string;
   errors?: Array<string>;
-  validate?: {
-    verb: "put" | "post" | "get" | "delete";
-    url: string;
+  clientValidation?: {
+    method?: "put" | "post" | "get" | "delete";
+    url?: string;
     triggerOn?: "keyup" | "blur";
   };
 }
 
-export const Input = ({ label, errors, validate, ...p }: Props) => {
-  const wrapperId = `${p.name}-input-wrapper`;
-  const errorId = `${p.name}-error`;
-  const inputId = `${p.name}-input`;
+export const Input = ({ label, clientValidation, name, ...p }: Props) => {
+  const wrapperId = `${name}-input-wrapper`;
+  const errorId = `${name}-input-error`;
+  const inputId = `${name}-input-field`;
 
-  const divHxTags = validate
+  const wrapperHtmxTags = clientValidation
     ? {
-        [`hx-${validate.verb}`]: validate.url,
+        [`hx-${clientValidation.method?.toLowerCase() ?? "post"}`]:
+          clientValidation.url ?? contextStore.getStore()?.path,
         "hx-select": `#${wrapperId}`,
         "hx-target": "this",
-        "hx-trigger": "keyup changed delay:1s from:find input",
+        "hx-trigger":
+          clientValidation.triggerOn === "keyup"
+            ? "keyup changed delay:1s from:find input"
+            : "change from:find input",
         "hx-swap": "outerHTML",
         "hx-include": `#${inputId}`,
       }
     : {};
 
-  const inputHxTags = validate
+  const inputHtmxTags = clientValidation
     ? {
         "hx-preserve": true,
-        autofocus: "true",
+        // ...(validate.triggerOn === "keyup" ? { autofocus: true } : {}),
       }
     : {};
 
+  const errors = p.errors ?? errorsStore.getStore()?.[name];
+
+  const value =
+    !p.value && typeof contextStore.getStore()?.body !== "undefined"
+      ? (contextStore.getStore()?.body as Record<string, string>)?.[name]
+      : "";
+
   return (
-    <div id={wrapperId} class="mb-8" {...divHxTags}>
+    <div id={wrapperId} class="mb-8" {...wrapperHtmxTags}>
       {label ? (
-        <label for={inputId} class="block text-gray-700 text-sm font-bold mb-2">
+        <label
+          for={inputId}
+          class={cn("block text-gray-700 text-sm font-bold mb-2")}
+        >
           {label}
         </label>
       ) : null}
-      <input
-        id={inputId}
-        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        {...p}
-        {...inputHxTags}
-      />
+      <div
+        class={cn(
+          "shadow appearance-none border rounded w-full text-gray-700 leading-tight",
+          errors && "border-2 border-red-500"
+        )}
+      >
+        <input
+          id={inputId}
+          class={cn("w-full py-2 px-3")}
+          {...p}
+          name={name}
+          value={value}
+          {...inputHtmxTags}
+        />
+      </div>
       {errors ? (
-        <div class="text-red-500" id={errorId}>
+        <div id={errorId} class={cn("text-red-500 mt-2")}>
           {errors?.join(" ")}
         </div>
       ) : null}
