@@ -1,4 +1,11 @@
-export const Form = ({ children, ...otherProps }: JSX.HtmlFormTag) => {
+import { globalContext } from "../globalStorages";
+import { cn } from "../utils";
+
+interface Props extends JSX.HtmlFormTag {
+  isValid?: boolean;
+}
+export const Form = ({ children, isValid, ...otherProps }: Props) => {
+  const context = globalContext.getStore();
   return (
     <form
       novalidate
@@ -8,11 +15,19 @@ export const Form = ({ children, ...otherProps }: JSX.HtmlFormTag) => {
       {...otherProps}
     >
       {children}
-      <input
+      <button
         type="submit"
-        value="Submit"
-        class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-      />
+        id={context?.btnSubmitId}
+        disabled={!isValid}
+        class={cn(
+          "text-white  focus:ring-4 focus:outline-none font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center",
+          isValid
+            ? "bg-blue-700 hover:bg-blue-800 focus:ring-blue-300"
+            : "bg-gray-500 cursor-not-allowed"
+        )}
+      >
+        Submit
+      </button>
     </form>
   );
 };

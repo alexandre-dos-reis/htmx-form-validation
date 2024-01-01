@@ -1,4 +1,4 @@
-import { errorsStore, contextStore } from "../store";
+import { globalFormErrors, globalContext } from "../globalStorages";
 import { cn } from "../utils";
 
 interface Props extends JSX.HtmlInputTag {
@@ -16,11 +16,12 @@ export const Input = ({ label, clientValidation, name, ...p }: Props) => {
   const wrapperId = `${name}-input-wrapper`;
   const errorId = `${name}-input-error`;
   const inputId = `${name}-input-field`;
+  const context = globalContext.getStore();
 
   const wrapperHtmxTags = clientValidation
     ? {
         [`hx-${clientValidation.method?.toLowerCase() ?? "post"}`]:
-          clientValidation.url ?? contextStore.getStore()?.path,
+          clientValidation.url ?? context?.path,
         "hx-select": `#${wrapperId}`,
         "hx-target": "this",
         "hx-trigger":
@@ -28,7 +29,8 @@ export const Input = ({ label, clientValidation, name, ...p }: Props) => {
             ? "keyup changed delay:1s from:find input"
             : "change from:find input",
         "hx-swap": "outerHTML",
-        "hx-include": `#${inputId}`,
+        "hx-include": `closest form`,
+        "hx-select-oob": context?.btnSubmitId,
       }
     : {};
 
@@ -39,12 +41,12 @@ export const Input = ({ label, clientValidation, name, ...p }: Props) => {
       }
     : {};
 
-  const errors = p.errors ?? errorsStore.getStore()?.[name];
+  const errors = p.errors ?? globalFormErrors.getStore()?.[name];
 
   const value =
-    !p.value && typeof contextStore.getStore()?.body !== "undefined"
-      ? (contextStore.getStore()?.body as Record<string, string>)?.[name]
-      : "";
+    !p.value && typeof context?.body !== "undefined"
+      ? (context?.body as Record<string, string>)?.[name]
+      : p.value;
 
   return (
     <div id={wrapperId} class="mb-8" {...wrapperHtmxTags}>

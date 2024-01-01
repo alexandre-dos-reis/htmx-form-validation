@@ -1,5 +1,10 @@
+import { globalContext } from "../globalStorages";
+
 export const BaseHtml = ({ children, ...p }: JSX.HtmlBodyTag) => {
-  return (
+  const context = globalContext.getStore();
+  return context?.isHtmxRequest ? (
+    <>{children}</>
+  ) : (
     <html lang="en">
       <head>
         <script src="https://cdn.tailwindcss.com"></script>

@@ -2,14 +2,16 @@ import { Elysia } from "elysia";
 import { z } from "zod";
 import { Input } from "./components/Input";
 import { BaseHtml } from "./components/BaseHtml";
-import { errorsStore } from "./store";
-import { config } from "./config";
+import { globalFormErrors } from "./globalStorages";
 import { Form } from "./components/Form";
+import { helpers } from "./config/helpers";
+import { globals } from "./config/globals";
 
 const schema = z.object({
   name: z.string().min(3),
   email: z
     .string()
+    .min(1)
     .email()
     .refine(async (email) => email !== "john@doe.com", {
       message: "Email is already taken",
@@ -21,21 +23,23 @@ const schema = z.object({
 });
 
 const app = new Elysia()
-  .use(config)
-  .all("/", async ({ body, set, request, isHtmxRequest }) => {
-    errorsStore.enterWith(null);
+  .use(helpers)
+  .use(globals)
+  .all("/", async ({ body, set, isHtmxRequest, isFormSubmitted }) => {
+    let isFormValid = false;
 
-    if (request.method === "POST") {
+    if (isFormSubmitted) {
       const parsedSchema = await schema.safeParseAsync(body);
 
       if (parsedSchema.success) {
+        isFormValid = true;
         if (!isHtmxRequest) {
           console.log(parsedSchema.data);
           set.redirect = "/form-completed";
           return;
         }
       } else {
-        errorsStore.enterWith(parsedSchema.error.flatten().fieldErrors);
+        globalFormErrors.enterWith(parsedSchema.error.flatten().fieldErrors);
       }
     }
 
@@ -44,7 +48,7 @@ const app = new Elysia()
         <h1 class="text-center text-xl">
           <a href="/">HTMX form</a>
         </h1>
-        <Form>
+        <Form isFormValid={isFormValid}>
           <Input
             label="Email"
             name="email"
