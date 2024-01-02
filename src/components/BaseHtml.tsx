@@ -1,10 +1,18 @@
 import { globalContext } from "../globalStorages";
+import { NavBar } from "./Navbar";
+
+const Body = ({ children, ...p }: JSX.HtmlBodyTag) => (
+  <body hx-boost="true" {...p}>
+    <NavBar />
+    {children}
+  </body>
+);
 
 export const BaseHtml = ({ children, ...p }: JSX.HtmlBodyTag) => {
   const context = globalContext.getStore();
 
   return context?.isHxRequest ? (
-    <>{children}</>
+    <Body {...p}>{children}</Body>
   ) : (
     <html lang="en">
       <head>
@@ -19,9 +27,7 @@ export const BaseHtml = ({ children, ...p }: JSX.HtmlBodyTag) => {
         {/* HTMX */}
         <title>Input validation</title>
       </head>
-      <body hx-boost="true" {...p}>
-        {children}
-      </body>
+      <Body {...p}>{children}</Body>
     </html>
   );
 };

@@ -14,7 +14,6 @@ const schema = z.object({
   name: z.string().min(3),
   email: z
     .string()
-    .min(1)
     .email()
     .refine(async (email) => email !== "john@doe.com", {
       message: "Email is already taken",
@@ -50,19 +49,20 @@ const app = new Elysia()
         if (data) {
           isFormValid = true;
           if (!isFormValidationRequest && isFormSubmitted) {
-            // do something with the data
-            console.log({ data });
-            redirectTo({ set, href: "/form-completed" });
-            return;
+            return (
+              <BaseHtml>
+                <h1 class="text-center">FORM COMPLETED !</h1>
+                <div class="flex items-center justify-center">
+                  {JSON.stringify(data, null, 4)}
+                </div>
+              </BaseHtml>
+            );
           }
         }
       }
 
       return (
         <BaseHtml>
-          <h1 class="text-center text-xl">
-            <a href="/">HTMX form</a>
-          </h1>
           <Form isValid={isFormValid}>
             <Input
               label="Email"

@@ -1,3 +1,4 @@
+import { isValid } from "zod";
 import { CONSTANTS } from "../config/constants";
 import { globalFormErrors, globalContext } from "../globalStorages";
 import { cn } from "../utils";
@@ -33,19 +34,14 @@ export const Input = ({ label, hxValidation, name, ...p }: Props) => {
         "hx-ext": "morph",
         "hx-swap": "morph:outerHTML",
         "hx-include": `closest form`,
-        // updating the submit button: show if form is valid.
-        "hx-select-oob": CONSTANTS.submitButtonId,
         "hx-headers": '{"app-form-validation": "true"}',
       }
     : {};
 
   const inputHtmxTags = hxValidation
     ? {
-        "hx-preserve": true,
         "hx-sync": "closest form:abort",
-        ...(hxValidation.triggerOn === "keyup" && errors
-          ? { autofocus: true }
-          : {}),
+        ...(errors ? { autofocus: true } : {}),
       }
     : {};
 
@@ -55,35 +51,32 @@ export const Input = ({ label, hxValidation, name, ...p }: Props) => {
       : p.value;
 
   return (
-    <div id={wrapperId} class="mb-8" {...wrapperHtmxTags}>
+    <label
+      id={wrapperId}
+      class={cn("form-control w-full max-w-xs mb-5")}
+      {...wrapperHtmxTags}
+    >
       {label ? (
-        <label
-          for={inputId}
-          class={cn("block text-gray-700 text-sm font-bold mb-2")}
-        >
-          {label}
-        </label>
-      ) : null}
-      <div
-        class={cn(
-          "shadow appearance-none border rounded w-full text-gray-700 leading-tight",
-          errors && "border-2 border-red-500"
-        )}
-      >
-        <input
-          id={inputId}
-          class={cn("w-full py-2 px-3")}
-          {...p}
-          name={name}
-          value={value}
-          {...inputHtmxTags}
-        />
-      </div>
-      {errors ? (
-        <div id={errorId} class={cn("text-red-500 mt-2")}>
-          {errors?.join(" ")}
+        <div class="label">
+          <span class="label-text">{label}</span>
         </div>
       ) : null}
-    </div>
+      <input
+        id={inputId}
+        class={cn(
+          "input input-bordered input-primary w-full max-w-xs",
+          errors && "input-error"
+        )}
+        {...p}
+        name={name}
+        value={value}
+        {...inputHtmxTags}
+      />
+      {errors ? (
+        <div id={errorId} class="label">
+          <span class="label-text-alt text-error">{errors?.join(" ")}</span>
+        </div>
+      ) : null}
+    </label>
   );
 };
