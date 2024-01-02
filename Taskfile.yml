@@ -1,0 +1,23 @@
+version: 3
+
+silent: true
+
+vars:
+  css_input: ./src/index.css
+  css_output: ./public/assets/index.css
+
+tasks:
+  dev:
+    deps: ["bun:dev", "assets:watch"]
+
+  assets:watch:
+    cmds:
+      - bunx postcss {{.css_input}} --output {{.css_output}} --watch
+
+  assets:build:
+    cmds:
+      - bunx postcss {{.css_input}} --output {{.css_output}} --minify
+
+  bun:dev:
+    cmds:
+      - bun run --watch src/index.tsx

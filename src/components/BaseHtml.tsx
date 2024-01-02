@@ -8,7 +8,7 @@ export const BaseHtml = ({ children, ...p }: JSX.HtmlBodyTag) => {
   ) : (
     <html lang="en">
       <head>
-        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="/public/assets/index.css" rel="stylesheet" />
         {/* HTMX */}
         <script
           src="https://unpkg.com/htmx.org@1.9.6"

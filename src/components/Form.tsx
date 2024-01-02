@@ -1,12 +1,10 @@
 import { CONSTANTS } from "../config/constants";
-import { globalContext, globalFormErrors } from "../globalStorages";
 import { cn } from "../utils";
 
 interface Props extends JSX.HtmlFormTag {
   isValid?: boolean;
 }
 export const Form = ({ children, isValid, ...otherProps }: Props) => {
-  const errors = globalFormErrors.getStore();
   return (
     <form
       novalidate

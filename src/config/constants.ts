@@ -1,3 +1,3 @@
 export const CONSTANTS = {
-  submitButtonId: "submit-button",
+  submitButtonId: "form-submit-btn",
 };

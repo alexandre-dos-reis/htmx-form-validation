@@ -8,6 +8,7 @@ import { globals } from "./config/globals";
 import { globalFormErrors } from "./globalStorages";
 import { handleForm } from "./form/helpers";
 import { redirectTo } from "./routers";
+import { staticPlugin } from "@elysiajs/static";
 
 const schema = z.object({
   name: z.string().min(3),
@@ -25,6 +26,7 @@ const schema = z.object({
 });
 
 const app = new Elysia()
+  .use(staticPlugin({ assets: "public", prefix: "public" }))
   .use(helpers)
   .use(globals)
   .all(
