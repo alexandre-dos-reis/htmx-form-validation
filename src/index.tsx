@@ -2,10 +2,12 @@ import { Elysia } from "elysia";
 import { z } from "zod";
 import { Input } from "./components/Input";
 import { BaseHtml } from "./components/BaseHtml";
-import { globalFormErrors } from "./globalStorages";
 import { Form } from "./components/Form";
 import { helpers } from "./config/helpers";
 import { globals } from "./config/globals";
+import { globalFormErrors } from "./globalStorages";
+import { handleForm } from "./form/helpers";
+import { redirectTo } from "./routers";
 
 const schema = z.object({
   name: z.string().min(3),
@@ -25,56 +27,68 @@ const schema = z.object({
 const app = new Elysia()
   .use(helpers)
   .use(globals)
-  .all("/", async ({ body, set, isHtmxRequest, isFormSubmitted }) => {
-    let isFormValid = false;
+  .all(
+    "/",
+    async ({
+      body,
+      set,
+      isFormSubmitted,
+      isMethodPost,
+      isFormValidationRequest,
+    }) => {
+      let isFormValid = false;
 
-    if (isFormSubmitted) {
-      const parsedSchema = await schema.safeParseAsync(body);
+      if (isMethodPost) {
+        const { data, errors } = await handleForm(schema, body);
 
-      if (parsedSchema.success) {
-        isFormValid = true;
-        if (!isHtmxRequest) {
-          console.log(parsedSchema.data);
-          set.redirect = "/form-completed";
-          return;
+        if (errors) {
+          globalFormErrors.enterWith(errors);
         }
-      } else {
-        globalFormErrors.enterWith(parsedSchema.error.flatten().fieldErrors);
-      }
-    }
 
-    return (
-      <BaseHtml>
-        <h1 class="text-center text-xl">
-          <a href="/">HTMX form</a>
-        </h1>
-        <Form isFormValid={isFormValid}>
-          <Input
-            label="Email"
-            name="email"
-            clientValidation={{
-              triggerOn: "blur",
-            }}
-          />
-          <Input
-            label="Name"
-            name="name"
-            clientValidation={{
-              triggerOn: "keyup",
-            }}
-          />
-          <Input
-            label="Age"
-            name="age"
-            type="number"
-            clientValidation={{
-              triggerOn: "blur",
-            }}
-          />
-        </Form>
-      </BaseHtml>
-    );
-  })
+        if (data) {
+          isFormValid = true;
+          if (!isFormValidationRequest && isFormSubmitted) {
+            // do something with the data
+            console.log({ data });
+            redirectTo({ set, href: "/form-completed" });
+            return;
+          }
+        }
+      }
+
+      return (
+        <BaseHtml>
+          <h1 class="text-center text-xl">
+            <a href="/">HTMX form</a>
+          </h1>
+          <Form isValid={isFormValid}>
+            <Input
+              label="Email"
+              name="email"
+              hxValidation={{
+                triggerOn: "keyup",
+              }}
+            />
+            <Input
+              label="Name"
+              name="name"
+              hxValidation={{
+                triggerOn: "blur",
+              }}
+            />
+            <Input
+              label="Age"
+              name="age"
+              type="number"
+              hxValidation={{
+                triggerOn: "blur",
+              }}
+            />
+          </Form>
+        </BaseHtml>
+      );
+    }
+  )
   .get("/form-completed", () => {
     return (
       <BaseHtml>

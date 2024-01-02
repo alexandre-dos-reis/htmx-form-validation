@@ -2,13 +2,15 @@ import { Elysia } from "elysia";
 import { html } from "@elysiajs/html";
 
 export const helpers = new Elysia().use(html()).derive(({ request }) => {
+  const isMethodPost = request.method === "POST";
   const contentType = request.headers.get("Content-Type");
   return {
-    btnSubmitId: "btn-submit",
-    isHtmxRequest: request.headers.has("hx-request"),
+    isMethodPost,
+    isHxRequest: request.headers.has("Hx-Request"),
+    isHxBoost: request.headers.has("Hx-Boost"),
     isFormSubmitted:
-      request.method === "POST" &&
-      (contentType === "application/x-www-form-urlencoded" ||
-        contentType === "multipart/form-data"),
+      (isMethodPost && contentType === "application/x-www-form-urlencoded") ||
+      (isMethodPost && contentType === "multipart/form-data"),
+    isFormValidationRequest: request.headers.has("App-Form-Validation"),
   };
 });

@@ -2,20 +2,26 @@ import { globalContext } from "../globalStorages";
 
 export const BaseHtml = ({ children, ...p }: JSX.HtmlBodyTag) => {
   const context = globalContext.getStore();
-  return context?.isHtmxRequest ? (
+
+  return context?.isHxRequest ? (
     <>{children}</>
   ) : (
     <html lang="en">
       <head>
         <script src="https://cdn.tailwindcss.com"></script>
+        {/* HTMX */}
         <script
           src="https://unpkg.com/htmx.org@1.9.6"
           integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni"
           crossorigin="anonymous"
         ></script>
+        <script src="https://unpkg.com/idiomorph/dist/idiomorph-ext.min.js"></script>
+        {/* HTMX */}
         <title>Input validation</title>
       </head>
-      <body {...p}>{children}</body>
+      <body hx-boost="true" {...p}>
+        {children}
+      </body>
     </html>
   );
 };

@@ -1,3 +1,4 @@
+import { CONSTANTS } from "../config/constants";
 import { globalFormErrors, globalContext } from "../globalStorages";
 import { cn } from "../utils";
 
@@ -5,43 +6,48 @@ interface Props extends JSX.HtmlInputTag {
   name: string;
   label?: string;
   errors?: Array<string>;
-  clientValidation?: {
+  hxValidation?: {
     method?: "put" | "post" | "get" | "delete";
     url?: string;
     triggerOn?: "keyup" | "blur";
   };
 }
 
-export const Input = ({ label, clientValidation, name, ...p }: Props) => {
+export const Input = ({ label, hxValidation, name, ...p }: Props) => {
   const wrapperId = `${name}-input-wrapper`;
   const errorId = `${name}-input-error`;
   const inputId = `${name}-input-field`;
   const context = globalContext.getStore();
+  const errors = p.errors ?? globalFormErrors.getStore()?.[name];
 
-  const wrapperHtmxTags = clientValidation
+  const wrapperHtmxTags = hxValidation
     ? {
-        [`hx-${clientValidation.method?.toLowerCase() ?? "post"}`]:
-          clientValidation.url ?? context?.path,
+        [`hx-${hxValidation.method?.toLowerCase() ?? "post"}`]:
+          hxValidation.url ?? context?.path,
         "hx-select": `#${wrapperId}`,
         "hx-target": "this",
         "hx-trigger":
-          clientValidation.triggerOn === "keyup"
+          hxValidation.triggerOn === "keyup"
             ? "keyup changed delay:1s from:find input"
             : "change from:find input",
-        "hx-swap": "outerHTML",
+        "hx-ext": "morph",
+        "hx-swap": "morph:outerHTML",
         "hx-include": `closest form`,
-        "hx-select-oob": context?.btnSubmitId,
+        // updating the submit button: show if form is valid.
+        "hx-select-oob": CONSTANTS.submitButtonId,
+        "hx-headers": '{"app-form-validation": "true"}',
       }
     : {};
 
-  const inputHtmxTags = clientValidation
+  const inputHtmxTags = hxValidation
     ? {
         "hx-preserve": true,
-        // ...(validate.triggerOn === "keyup" ? { autofocus: true } : {}),
+        "hx-sync": "closest form:abort",
+        ...(hxValidation.triggerOn === "keyup" && errors
+          ? { autofocus: true }
+          : {}),
       }
     : {};
-
-  const errors = p.errors ?? globalFormErrors.getStore()?.[name];
 
   const value =
     !p.value && typeof context?.body !== "undefined"
