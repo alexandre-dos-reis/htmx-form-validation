@@ -32,13 +32,10 @@ const app = new Elysia()
     "/",
     async ({
       body,
-      set,
       isFormSubmitted,
       isMethodPost,
       isFormValidationRequest,
     }) => {
-      let isFormValid = false;
-
       if (isMethodPost) {
         const { data, errors } = await handleForm(schema, body);
 
@@ -47,7 +44,6 @@ const app = new Elysia()
         }
 
         if (data) {
-          isFormValid = true;
           if (!isFormValidationRequest && isFormSubmitted) {
             return (
               <BaseHtml>
@@ -63,7 +59,7 @@ const app = new Elysia()
 
       return (
         <BaseHtml>
-          <Form isValid={isFormValid}>
+          <Form>
             <Input
               label="Email"
               name="email"
@@ -91,13 +87,6 @@ const app = new Elysia()
       );
     }
   )
-  .get("/form-completed", () => {
-    return (
-      <BaseHtml>
-        <h1>FORM COMPLETED !</h1>
-      </BaseHtml>
-    );
-  })
   .listen(3000);
 
 console.log(

@@ -1,10 +1,17 @@
 import { globalContext } from "../globalStorages";
+import { cn } from "../utils";
+import { Footer } from "./Footer";
 import { NavBar } from "./Navbar";
 
-const Body = ({ children, ...p }: JSX.HtmlBodyTag) => (
-  <body hx-boost="true" {...p}>
+const Body = ({ children, class: className, ...p }: JSX.HtmlBodyTag) => (
+  <body
+    hx-boost="true"
+    class={cn("min-h-screen flex flex-col", className)}
+    {...p}
+  >
     <NavBar />
     {children}
+    <Footer />
   </body>
 );
 

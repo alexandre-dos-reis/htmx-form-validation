@@ -34,14 +34,13 @@ export const Input = ({ label, hxValidation, name, ...p }: Props) => {
         "hx-ext": "morph",
         "hx-swap": "morph:outerHTML",
         "hx-include": `closest form`,
-        "hx-headers": '{"app-form-validation": "true"}',
+        ...CONSTANTS["App-Form-Validation"].attribute,
       }
     : {};
 
   const inputHtmxTags = hxValidation
     ? {
         "hx-sync": "closest form:abort",
-        ...(errors ? { autofocus: true } : {}),
       }
     : {};
 
@@ -53,7 +52,7 @@ export const Input = ({ label, hxValidation, name, ...p }: Props) => {
   return (
     <label
       id={wrapperId}
-      class={cn("form-control w-full max-w-xs mb-5")}
+      class={cn("form-control w-full max-w-xs", errors ? "mb-3" : "mb-11")}
       {...wrapperHtmxTags}
     >
       {label ? (

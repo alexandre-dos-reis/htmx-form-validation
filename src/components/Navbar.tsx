@@ -2,13 +2,13 @@ import { ThemeController } from "./ThemeController";
 
 export const NavBar = () => {
   return (
-    <div class="navbar bg-base-100">
+    <div class="navbar bg-base-200 mb-11">
       <div class="flex-1">
         <a class="btn btn-ghost text-xl" href="/">
           htmx
         </a>
       </div>
-      <div class="flex gap-x-3">
+      <div class="gap-x-3">
         <div>
           <ThemeController />
         </div>
