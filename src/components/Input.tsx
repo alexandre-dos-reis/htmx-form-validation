@@ -26,7 +26,7 @@ export const Input = ({ label, hxValidation, name, ...p }: Props) => {
         [`hx-${hxValidation.method?.toLowerCase() ?? "post"}`]:
           hxValidation.url ?? context?.path,
         "hx-select": `#${wrapperId}`,
-        "hx-target": "this",
+        // "hx-target": "this",
         "hx-trigger":
           hxValidation.triggerOn === "keyup"
             ? "keyup changed delay:1s from:find input"

@@ -9,7 +9,7 @@ import {
   getSchemaFromDefinition,
   handleForm,
   renderForm,
-  renderHxFragmentFromRequest,
+  renderInputFromHxRequest,
 } from "./form/helpers";
 import { staticPlugin } from "@elysiajs/static";
 import { html } from "@elysiajs/html";
@@ -47,7 +47,7 @@ const form = {
       .transform((v) => parseInt(v, 10)),
     props: {
       type: "number",
-      label: "Name",
+      label: "Age",
       hxValidation: {
         triggerOn: "blur",
       },
@@ -75,7 +75,7 @@ const app = new Elysia()
         }
 
         if (isFormValidationRequest) {
-          return renderHxFragmentFromRequest({
+          return renderInputFromHxRequest({
             form,
           });
         }
@@ -92,7 +92,7 @@ const app = new Elysia()
         }
       }
 
-      return <BaseHtml>{renderForm(form)}</BaseHtml>;
+      return <BaseHtml>{renderForm({ form })}</BaseHtml>;
     }
   )
   .listen(3000);

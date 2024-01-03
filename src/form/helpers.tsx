@@ -32,37 +32,52 @@ export type FormDefinition = Record<
   { props: Omit<ComponentProps<typeof Input>, "name">; schema: z.ZodTypeAny }
 >;
 
-export const getSchemaFromDefinition = (def: FormDefinition) => {
+export const getSchemaFromDefinition = <TFormDef extends FormDefinition>(
+  form: TFormDef
+): z.ZodObject<{ [Key in keyof TFormDef]: TFormDef[Key]["schema"] }> => {
+  // @ts-ignore
   return z.object(
     Object.fromEntries(
-      new Map<keyof typeof def, z.ZodTypeAny>(
-        Object.keys(def).map((k) => [k, def[k].schema])
+      new Map(
+        Object.keys(form).map(
+          (k) =>
+            [k, form[k].schema] as [
+              keyof TFormDef,
+              TFormDef[typeof k]["schema"]
+            ]
+        )
       )
     )
   );
 };
 
-export const renderForm = (def: FormDefinition) => {
+export const renderForm = ({
+  form,
+  formProps,
+}: {
+  form: FormDefinition;
+  formProps?: ComponentProps<typeof Form>;
+}) => {
   return (
-    <Form>
-      {Object.keys(def).map((k) => (
-        <Input name={k} {...def[k].props} />
+    <Form {...formProps}>
+      {Object.keys(form).map((k) => (
+        <Input name={k} {...form[k].props} />
       ))}
     </Form>
   );
 };
 
 export const renderFormInput = <TDef extends FormDefinition>({
-  name,
   form,
+  name,
 }: {
-  name: string;
   form: TDef;
+  name: keyof TDef;
 }) => {
   return <Input name={name as string} {...form[name]["props"]} />;
 };
 
-export const renderHxFragmentFromRequest = ({
+export const renderInputFromHxRequest = ({
   form,
 }: {
   form: FormDefinition;

@@ -1,17 +1,16 @@
-import { CONSTANTS } from "../config/constants";
-import { globalContext } from "../globalStorages";
 import { cn } from "../utils";
 
 interface Props extends JSX.HtmlFormTag {
-  label?: string;
+  submitBtnlabel?: string;
 }
-export const Form = ({ children, label, ...otherProps }: Props) => {
+export const Form = ({ children, submitBtnlabel, ...otherProps }: Props) => {
   return (
     <form
       novalidate
       autocomplete="off"
       method="post"
-      class="flex flex-col w-full justify-center items-center"
+      // changed display to grid
+      class={cn("flex flex-col w-full justify-center items-center")}
       {...otherProps}
     >
       {children}
@@ -21,7 +20,7 @@ export const Form = ({ children, label, ...otherProps }: Props) => {
         // disabled={!isValid}
         class={cn("btn btn-outline btn-neutral")}
       >
-        {label ?? "Submit"}
+        {submitBtnlabel ?? "Submit"}
       </button>
     </form>
   );
