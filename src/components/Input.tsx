@@ -1,5 +1,5 @@
 import { isValid } from "zod";
-import { CONSTANTS } from "../config/constants";
+import { ATTRIBUTES_CONSTANTS, HX_CONSTANTS } from "../config/constants";
 import { globalFormErrors, globalContext } from "../globalStorages";
 import { cn } from "../utils";
 
@@ -15,9 +15,9 @@ interface Props extends JSX.HtmlInputTag {
 }
 
 export const Input = ({ label, hxValidation, name, ...p }: Props) => {
-  const wrapperId = `${name}-input-wrapper`;
-  const errorId = `${name}-input-error`;
-  const inputId = `${name}-input-field`;
+  const wrapperId = `${name}${ATTRIBUTES_CONSTANTS.form["inputWrapperId"]}`;
+  const errorId = `${name}${ATTRIBUTES_CONSTANTS.form["inputErrorId"]}`;
+  const inputId = `${name}${ATTRIBUTES_CONSTANTS.form["inputId"]}`;
   const context = globalContext.getStore();
   const errors = p.errors ?? globalFormErrors.getStore()?.[name];
 
@@ -34,7 +34,7 @@ export const Input = ({ label, hxValidation, name, ...p }: Props) => {
         "hx-ext": "morph",
         "hx-swap": "morph:outerHTML",
         "hx-include": `closest form`,
-        ...CONSTANTS["App-Form-Validation"].attribute,
+        ...HX_CONSTANTS["App-Form-Validation"].attribute,
       }
     : {};
 

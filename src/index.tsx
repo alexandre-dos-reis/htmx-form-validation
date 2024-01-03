@@ -1,90 +1,98 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { Input } from "./components/Input";
 import { BaseHtml } from "./components/BaseHtml";
-import { Form } from "./components/Form";
 import { helpers } from "./config/helpers";
 import { globals } from "./config/globals";
 import { globalFormErrors } from "./globalStorages";
-import { handleForm } from "./form/helpers";
-import { redirectTo } from "./routers";
+import {
+  FormDefinition,
+  getSchemaFromDefinition,
+  handleForm,
+  renderForm,
+  renderHxFragmentFromRequest,
+} from "./form/helpers";
 import { staticPlugin } from "@elysiajs/static";
+import { html } from "@elysiajs/html";
 
-const schema = z.object({
-  name: z.string().min(3),
-  email: z
-    .string()
-    .email()
-    .refine(async (email) => email !== "john@doe.com", {
-      message: "Email is already taken",
-    }),
-  age: z
-    .string()
-    .min(1, "Field must contain a value !")
-    .transform((v) => parseInt(v, 10)),
-});
+const form = {
+  email: {
+    schema: z
+      .string()
+      .email()
+      .max(255)
+      .refine(async (email) => email !== "john@doe.com", {
+        message: "Email is already taken",
+      }),
+    props: {
+      label: "Email",
+      hxValidation: {
+        triggerOn: "keyup",
+      },
+    },
+  },
+  name: {
+    schema: z.string().min(3).max(255),
+    props: {
+      label: "Name",
+      hxValidation: {
+        triggerOn: "blur",
+      },
+    },
+  },
+  age: {
+    schema: z
+      .string()
+      .min(1)
+      .max(3)
+      .transform((v) => parseInt(v, 10)),
+    props: {
+      type: "number",
+      label: "Name",
+      hxValidation: {
+        triggerOn: "blur",
+      },
+    },
+  },
+} satisfies FormDefinition;
+
+const schema = getSchemaFromDefinition(form);
 
 const app = new Elysia()
+  .use(html())
   .use(staticPlugin({ assets: "public", prefix: "public" }))
   .use(helpers)
   .use(globals)
   .all(
     "/",
-    async ({
-      body,
-      isFormSubmitted,
-      isMethodPost,
-      isFormValidationRequest,
-    }) => {
+    async ({ isFormSubmitted, isMethodPost, isFormValidationRequest }) => {
       if (isMethodPost) {
-        const { data, errors } = await handleForm(schema, body);
+        const { data, errors } = await handleForm({
+          schema,
+        });
 
         if (errors) {
           globalFormErrors.enterWith(errors);
         }
 
-        if (data) {
-          if (!isFormValidationRequest && isFormSubmitted) {
-            return (
-              <BaseHtml>
-                <h1 class="text-center">FORM COMPLETED !</h1>
-                <div class="flex items-center justify-center">
-                  {JSON.stringify(data, null, 4)}
-                </div>
-              </BaseHtml>
-            );
-          }
+        if (isFormValidationRequest) {
+          return renderHxFragmentFromRequest({
+            form,
+          });
+        }
+
+        if (isFormSubmitted && data) {
+          return (
+            <BaseHtml>
+              <h1 class="text-center">FORM COMPLETED !</h1>
+              <div class="flex items-center justify-center">
+                {JSON.stringify(data, null, 4)}
+              </div>
+            </BaseHtml>
+          );
         }
       }
 
-      return (
-        <BaseHtml>
-          <Form>
-            <Input
-              label="Email"
-              name="email"
-              hxValidation={{
-                triggerOn: "keyup",
-              }}
-            />
-            <Input
-              label="Name"
-              name="name"
-              hxValidation={{
-                triggerOn: "blur",
-              }}
-            />
-            <Input
-              label="Age"
-              name="age"
-              type="number"
-              hxValidation={{
-                triggerOn: "blur",
-              }}
-            />
-          </Form>
-        </BaseHtml>
-      );
+      return <BaseHtml>{renderForm(form)}</BaseHtml>;
     }
   )
   .listen(3000);
