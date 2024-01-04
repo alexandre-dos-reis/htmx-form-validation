@@ -32,6 +32,7 @@ export const BaseHtml = ({ children, ...p }: JSX.HtmlBodyTag) => {
         ></script>
         <script src="https://unpkg.com/idiomorph/dist/idiomorph-ext.min.js"></script>
         {/* HTMX */}
+        <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
         <title>Input validation</title>
       </head>
       <Body {...p}>{children}</Body>

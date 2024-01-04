@@ -45,7 +45,7 @@ export const Input = ({ label, hxValidation, name, ...p }: Props) => {
     : {};
 
   const value =
-    !p.value && typeof context?.body !== "undefined"
+    typeof context?.body !== "undefined"
       ? (context?.body as Record<string, string>)?.[name]
       : p.value;
 

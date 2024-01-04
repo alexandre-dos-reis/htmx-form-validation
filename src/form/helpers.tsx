@@ -32,36 +32,38 @@ export type FormDefinition = Record<
   { props: Omit<ComponentProps<typeof Input>, "name">; schema: z.ZodTypeAny }
 >;
 
-export const getSchemaFromDefinition = <TFormDef extends FormDefinition>(
-  form: TFormDef
-): z.ZodObject<{ [Key in keyof TFormDef]: TFormDef[Key]["schema"] }> => {
+export const getSchemaFromDefinition = <TDef extends FormDefinition>(
+  form: TDef
+): z.ZodObject<{ [Key in keyof TDef]: TDef[Key]["schema"] }> => {
   // @ts-ignore
   return z.object(
     Object.fromEntries(
       new Map(
         Object.keys(form).map(
-          (k) =>
-            [k, form[k].schema] as [
-              keyof TFormDef,
-              TFormDef[typeof k]["schema"]
-            ]
+          (k) => [k, form[k].schema] as [keyof TDef, TDef[typeof k]["schema"]]
         )
       )
     )
   );
 };
 
-export const renderForm = ({
+export const renderForm = <TDef extends FormDefinition>({
   form,
   formProps,
+  defaultValues,
 }: {
-  form: FormDefinition;
+  form: TDef;
+  defaultValues?: { [Key in keyof TDef]: z.infer<TDef[Key]["schema"]> };
   formProps?: ComponentProps<typeof Form>;
 }) => {
   return (
     <Form {...formProps}>
-      {Object.keys(form).map((k) => (
-        <Input name={k} {...form[k].props} />
+      {Object.keys(form).map((name) => (
+        <Input
+          name={name}
+          value={defaultValues?.[name]}
+          {...form[name].props}
+        />
       ))}
     </Form>
   );

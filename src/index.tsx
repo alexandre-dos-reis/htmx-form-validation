@@ -92,9 +92,19 @@ const app = new Elysia()
         }
       }
 
-      return <BaseHtml>{renderForm({ form })}</BaseHtml>;
+      const user = { age: 23, email: "alex@gmail.com", name: "Alex" };
+
+      return (
+        <BaseHtml>
+          {renderForm({
+            form,
+            defaultValues: user,
+          })}
+        </BaseHtml>
+      );
     }
   )
+  .get("/form-completed", () => <BaseHtml>ok</BaseHtml>)
   .listen(3000);
 
 console.log(
