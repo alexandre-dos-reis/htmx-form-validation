@@ -16,6 +16,7 @@ import { html } from "@elysiajs/html";
 
 const form = {
   email: {
+    type: "input",
     schema: z
       .string()
       .email()
@@ -31,6 +32,7 @@ const form = {
     },
   },
   name: {
+    type: "input",
     schema: z.string().min(3).max(255),
     props: {
       label: "Name",
@@ -40,6 +42,7 @@ const form = {
     },
   },
   age: {
+    type: "input",
     schema: z
       .string()
       .min(1)
@@ -53,6 +56,21 @@ const form = {
       },
     },
   },
+  agree: {
+    type: "toggle",
+    schema: z.coerce.boolean(),
+    props: {
+      label: "Email",
+    },
+  },
+  radio: {
+    type: "radio",
+    schema: z.string(),
+    props: {
+      choices: ["choice 1", "choice 2", "choice 3", "choice 4"],
+      label: "Choices",
+    },
+  },
 } satisfies FormDefinition;
 
 const schema = getSchemaFromDefinition(form);
@@ -64,8 +82,15 @@ const app = new Elysia()
   .use(globals)
   .all(
     "/",
-    async ({ isFormSubmitted, isMethodPost, isFormValidationRequest }) => {
+    async ({
+      isFormSubmitted,
+      isMethodPost,
+      isFormValidationRequest,
+      body,
+    }) => {
       if (isMethodPost) {
+        console.log({ body });
+
         const { data, errors } = await handleForm({
           schema,
         });
@@ -92,7 +117,13 @@ const app = new Elysia()
         }
       }
 
-      const user = { age: 23, email: "alex@gmail.com", name: "Alex" };
+      const user = {
+        age: 23,
+        email: "alex@gmail.com",
+        name: "Alex",
+        agree: true,
+        radio: "choice 2",
+      };
 
       return (
         <BaseHtml>

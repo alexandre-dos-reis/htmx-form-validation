@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Input } from "./components/Input";
 
 export const isObjectSet = (obj: Object) => {
   return Object.keys(obj).length !== 0 || obj.constructor !== Object;
@@ -17,3 +16,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export type ComponentProps<T extends (props: any) => JSX.Element> =
   Parameters<T>[number];
+
+// export type ComponentProps<
+//   T extends JSX.Element | keyof JSX.IntrinsicElements
+// > = T extends keyof JSX.IntrinsicElements ? JSX.IntrinsicElements[T] : {};
