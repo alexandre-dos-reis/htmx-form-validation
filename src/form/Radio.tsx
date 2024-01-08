@@ -2,9 +2,9 @@ import { cn } from "../utils";
 import { formFieldBuilder } from "./formFieldBuilder";
 import { BaseFormComponent } from "./interfaces";
 
-interface Props extends Omit<JSX.HtmlInputTag, "name">, BaseFormComponent {
+export interface RadioProps extends Omit<JSX.HtmlInputTag, "name">, BaseFormComponent {
   label?: string;
-  choices: Array<string>;
+  choices: Array<{ value: string; children: JSX.Element }>;
 }
 
 const colors = [
@@ -17,7 +17,7 @@ const colors = [
   "radio-error",
 ];
 
-export const Radio = ({ name, choices, value: _value, ...p }: Props) => {
+export const Radio = ({ name, choices, value: _value, ...p }: RadioProps) => {
   const { value, errors, inputId, errorId, wrapperId } = formFieldBuilder({
     name,
     value: _value,
@@ -28,15 +28,15 @@ export const Radio = ({ name, choices, value: _value, ...p }: Props) => {
       {choices.map((choice, i) => (
         <div class="form-control w-32">
           <label class="label cursor-pointer">
-            <span class="label-text">{choice}</span>
+            <span class="label-text">{choice.children}</span>
             <input
               {...p}
               id={inputId}
               type="radio"
               name={name}
               class={cn("radio", colors[i])}
-              value={choice}
-              checked={choice === value ? true : undefined}
+              value={choice.value}
+              checked={choice.value === value ? true : undefined}
             />
           </label>
         </div>

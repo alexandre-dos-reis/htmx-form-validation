@@ -1,143 +1,129 @@
 import { z } from "zod";
 import { globalContext } from "../globalStorages";
 import { ComponentProps } from "../utils";
-import { Input } from "./Input";
-import { Toggle } from "./Toggle";
-import { Radio } from "./Radio";
+import { Input, InputProps } from "./Input";
+import { Toggle, ToggleProps } from "./Toggle";
+import { Radio, RadioProps } from "./Radio";
+import { Select, SelectProps } from "./Select";
 import { Form } from "./Form";
 import { ATTRIBUTES_CONSTANTS } from "../config/constants";
+import { match } from "ts-pattern";
 
-export const handleForm = async <T extends z.ZodTypeAny>({
-  schema,
-}: {
-  schema: T;
-}): Promise<{
-  data?: z.infer<T>;
-  errors?: Partial<Record<keyof z.infer<T>, string[] | undefined>>;
-}> => {
-  const context = globalContext.getStore();
-  const parsedSchema = await schema.safeParseAsync(context?.body);
+type OmitName<TProps extends { name: string }> = Omit<TProps, "name">;
 
-  if (parsedSchema.success) {
-    return { data: parsedSchema.data, errors: undefined };
-  } else {
-    return {
-      data: undefined,
-      // @ts-ignore
-      errors: parsedSchema.error.flatten().fieldErrors,
+type PropsPerType =
+  | {
+      type?: "input";
+      props: OmitName<InputProps>;
+    }
+  | {
+      type: "toggle";
+      props: OmitName<ToggleProps>;
+    }
+  | {
+      type: "select";
+      props: OmitName<SelectProps>;
+    }
+  | {
+      type: "radio";
+      props: OmitName<RadioProps>;
     };
+
+export type FormDefinition = Record<
+  string,
+  PropsPerType & {
+    schema: z.ZodTypeAny;
   }
-};
+>;
 
-type ComponentsPropsMap = {
-  input: ComponentProps<typeof Input>;
-  toggle: ComponentProps<typeof Toggle>;
-  radio: ComponentProps<typeof Radio>;
-};
-
-type FormElement<
-  TComponentsMap extends ComponentsPropsMap = ComponentsPropsMap,
-  TKey extends keyof TComponentsMap = keyof TComponentsMap
-> = {
-  type: TKey;
-  props: Omit<TComponentsMap[TKey], "name">;
-  schema: z.ZodTypeAny;
-};
-
-export type FormDefinition = Record<string, FormElement>;
-
-export const getSchemaFromDefinition = <TDef extends FormDefinition>(
-  form: TDef
-): z.ZodObject<{ [Key in keyof TDef]: TDef[Key]["schema"] }> => {
-  // @ts-ignore
-  return z.object(
-    Object.fromEntries(
-      new Map(
-        Object.keys(form).map(
-          (k) => [k, form[k].schema] as [keyof TDef, TDef[typeof k]["schema"]]
-        )
-      )
-    )
-  );
-};
-
-export const getComponent = <
-  TComponentsMap extends ComponentsPropsMap = ComponentsPropsMap,
-  TKey extends keyof TComponentsMap = keyof TComponentsMap
->({
-  type,
-  value,
-  name,
-  props,
-}: {
-  type: TKey;
-  value: any;
-  name: string;
-  props: Omit<TComponentsMap[TKey], "name">;
-}) => {
-  switch (type) {
-    case "input":
-      return <Input {...props} name={name} value={value} />;
-    case "toggle":
-      return <Toggle {...props} name={name} value={value} />;
-    case "radio":
-      return <Radio {...props} name={name} value={value} />;
-    default:
-      return <></>;
-  }
-};
-
-export const renderForm = <TDef extends FormDefinition>({
-  form,
-  formProps,
-  defaultValues,
-}: {
-  form: TDef;
-  defaultValues?: { [Key in keyof TDef]: z.infer<TDef[Key]["schema"]> };
-  formProps?: ComponentProps<typeof Form>;
-}) => {
-  return (
-    <Form {...formProps}>
-      {Object.keys(form).map((name) => {
-        const { type, props } = form[name];
-        const value = defaultValues?.[name];
-        return getComponent({ type, name, props, value });
-      })}
-    </Form>
-  );
-};
-
-export const renderFormInput = <TDef extends FormDefinition>({
-  form,
-  name,
-}: {
-  form: TDef;
-  name: keyof TDef;
-}) => {
-  const {
-    type,
-    props: { value, ...otherProps },
-  } = form[name];
-  return getComponent({ name: name as string, value, type, props: otherProps });
-};
-
-export const renderInputFromHxRequest = ({
-  form,
-}: {
-  form: FormDefinition;
-}) => {
-  const context = globalContext.getStore();
-
-  let name =
-    context?.hxTriggerName ||
-    context?.hxTargetId?.replace(
-      ATTRIBUTES_CONSTANTS.form["inputWrapperId"],
-      ""
+export const createForm = <TFormDef extends FormDefinition>({ form }: { form: TFormDef }) => {
+  const getSchemaFromDefinition = (): z.ZodObject<{
+    [Key in keyof TFormDef]: TFormDef[Key]["schema"];
+  }> => {
+    // @ts-ignore
+    return z.object(
+      Object.fromEntries(
+        new Map(Object.keys(form).map((k) => [k, form[k].schema] as [keyof TFormDef, TFormDef[typeof k]["schema"]])),
+      ),
     );
+  };
 
-  if (name && name in form) {
-    return renderFormInput({ name, form });
-  }
+  type Schema = ReturnType<typeof getSchemaFromDefinition>;
 
-  return <></>;
+  const handleForm = async (): Promise<{
+    data?: z.infer<ReturnType<typeof getSchemaFromDefinition>>;
+    errors?: Partial<Record<keyof z.infer<Schema>, string[] | undefined>>;
+  }> => {
+    const context = globalContext.getStore();
+    const parsedSchema = await getSchemaFromDefinition().safeParseAsync(context?.body);
+
+    if (parsedSchema.success) {
+      return { data: parsedSchema.data, errors: undefined };
+    } else {
+      return {
+        data: undefined,
+        // @ts-ignore
+        errors: parsedSchema.error.flatten().fieldErrors,
+      };
+    }
+  };
+
+  const getComponent = ({ propsPerType, name }: { propsPerType: PropsPerType; name: string }) => {
+    return match(propsPerType)
+      .with({ type: "input" }, ({ props }) => <Input {...props} name={name} />)
+      .with({ type: "toggle" }, ({ props }) => <Toggle {...props} name={name} />)
+      .with({ type: "radio" }, ({ props }) => <Radio {...props} name={name} />)
+      .with({ type: "select" }, ({ props }) => <Select {...props} name={name} />)
+      .otherwise(({ props }) => <Input {...props} name={name} />);
+  };
+
+  const renderForm = ({
+    formProps,
+    defaultValues,
+  }: {
+    defaultValues?: {
+      [Key in keyof TFormDef]: z.infer<TFormDef[Key]["schema"]>;
+    };
+    formProps?: ComponentProps<typeof Form>;
+  }) => {
+    return (
+      <Form {...formProps}>
+        {Object.keys(form).map((name) => {
+          const { type, props } = form[name];
+          return getComponent({
+            name,
+            propsPerType: {
+              type: type as any,
+              props: { ...props, value: defaultValues?.[name] },
+            },
+          });
+        })}
+      </Form>
+    );
+  };
+
+  const renderFormInput = ({ name }: { name: keyof TFormDef }) => {
+    const { type, props } = form[name];
+    return getComponent({
+      name: name as string,
+      propsPerType: {
+        props: props as any,
+        type: type as any,
+      },
+    });
+  };
+
+  const renderInputFromHxRequest = () => {
+    const context = globalContext.getStore();
+
+    let name = context?.hxTriggerName || context?.hxTargetId?.replace(ATTRIBUTES_CONSTANTS.form["inputWrapperId"], "");
+
+    if (name && name in form) {
+      return renderFormInput({ name });
+    }
+
+    return <></>;
+  };
+
+  return { handleForm, renderForm, renderInputFromHxRequest };
 };

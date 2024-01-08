@@ -2,14 +2,14 @@ import { cn } from "../utils";
 import { formFieldBuilder } from "./formFieldBuilder";
 import { BaseFormComponent } from "./interfaces";
 
-interface Props
+export interface ToggleProps
   extends Omit<JSX.HtmlInputTag, "name" | "value">,
     BaseFormComponent {
   value?: boolean;
   label?: string;
 }
 
-export const Toggle = ({ label, name, value: _value, ...p }: Props) => {
+export const Toggle = ({ label, name, value: _value, ...p }: ToggleProps) => {
   const { value, errors, inputId, errorId, wrapperId } = formFieldBuilder({
     name,
     value: _value,

@@ -2,7 +2,7 @@ import { cn } from "../utils";
 import { formFieldBuilder } from "./formFieldBuilder";
 import { BaseFormComponent, HxValidation } from "./interfaces";
 
-interface Props
+export interface InputProps
   extends Omit<JSX.HtmlInputTag, "name">,
     BaseFormComponent,
     HxValidation {}
@@ -13,7 +13,7 @@ export const Input = ({
   name,
   value: _value,
   ...p
-}: Props) => {
+}: InputProps) => {
   const {
     value,
     errors,
