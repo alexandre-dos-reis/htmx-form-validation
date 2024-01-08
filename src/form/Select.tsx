@@ -26,6 +26,7 @@ export const Select = ({ label, name, value: _value, options, defaultOptionLabel
         class={cn("select select-primary w-full max-w-xs", errors && "input-error")}
         {...p}
         name={name}
+        _={`on change if #${errorId} exists remove #${errorId}`}
       >
         <option disabled selected={value ? undefined : "selected"} value={""}>
           {defaultOptionLabel ?? "-Select a choice-"}

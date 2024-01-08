@@ -48,6 +48,18 @@ const { renderForm, handleForm, renderInputFromHxRequest } = createForm({
         },
       },
     },
+    select: {
+      type: "select",
+      schema: z.string().min(1, "Please, select a choice !"),
+      props: {
+        label: "Select",
+        options: [
+          { label: "Choice 1", value: "choice-1" },
+          { label: "Choice 2", value: "choice-2" },
+          { label: "Choice 3", value: "choice-3" },
+        ],
+      },
+    },
     toggle: {
       type: "toggle",
       schema: z.coerce.boolean(),
@@ -65,17 +77,6 @@ const { renderForm, handleForm, renderInputFromHxRequest } = createForm({
           { children: "Choice 3", value: "choice-3" },
         ],
         label: "Choices",
-      },
-    },
-    select: {
-      type: "select",
-      schema: z.string().min(1, "Please, select a choice !"),
-      props: {
-        options: [
-          { label: "Choice 1", value: "choice-1" },
-          { label: "Choice 2", value: "choice-2" },
-          { label: "Choice 3", value: "choice-3" },
-        ],
       },
     },
   } satisfies FormDefinition,
@@ -117,7 +118,7 @@ const app = new Elysia()
       name: "Alex",
       toggle: true,
       radio: "choice-3",
-      select: "choice-3",
+      select: "",
     };
 
     return (

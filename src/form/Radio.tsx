@@ -34,7 +34,7 @@ export const Radio = ({ name, choices, value: _value, ...p }: RadioProps) => {
               id={inputId}
               type="radio"
               name={name}
-              class={cn("radio", colors[i])}
+              class={cn("radio", colors[i % colors.length])}
               value={choice.value}
               checked={choice.value === value ? true : undefined}
             />
